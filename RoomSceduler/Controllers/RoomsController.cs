@@ -61,7 +61,6 @@ namespace RoomSceduler.Controllers
 
                 if ( !date1 )
                 {
-
                     var roomOpeningDatetime = DateTime
                         .Parse( $"{check.Date} T {room.AvailableFrom}");
 
@@ -98,20 +97,70 @@ namespace RoomSceduler.Controllers
                             sb.AppendLine($"{nextTimeInterval} ||");
                             sb.AppendLine();
                             FirstTimeRoomIsAvailableFromPlusFifteen = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(15);
-
                         }
                         break;
                     }
-
                 }
                 else
                 {
-                    //var roomOpeningDatetime = DateTime
-                        //.Parse($"{check.Date} T {room.AvailableFrom}");
-                   // var roomClosingDatetime = DateTime
-                        //.Parse(check.Date + "T" + room.AvailableTo);
+                    var roomOpeningDatetime = DateTime
+                        .Parse($"{check.Date} T {room.AvailableFrom}");
 
+                    var roomClosingDatetime = DateTime
+                        .Parse(check.Date + "T" + room.AvailableTo);
 
+                    var datetimeRoomSchedules = room.Schedule
+                        .Select(x => new TimeSlotSort
+                        {
+                            From = DateTime.Parse(x.From),
+                            To = DateTime.Parse(x.To)
+                        }).ToList();
+
+                    datetimeRoomSchedules = datetimeRoomSchedules
+                        .OrderBy(x => x.From)
+                        .ToList();
+
+                    for (int i = 0; i < datetimeRoomSchedules.Count; i++)
+                    {
+                        var minutes = (datetimeRoomSchedules[i].From - roomOpeningDatetime);
+
+                        if (minutes.TotalMinutes >= check.MeetingDuration)
+                        {
+                            while (true)
+                            {
+                                var FirstTimeRoomIsAvailableFrom = roomOpeningDatetime;
+                                var RoomIsAvailableTo = roomOpeningDatetime
+                                    .AddMinutes(check.MeetingDuration);
+
+                                var FirstTimeRoomIsAvailable = $"{FirstTimeRoomIsAvailableFrom.ToString("yyyy-MM-dd HH:mm:ss")} - {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} ||";
+
+                                sb.AppendLine(FirstTimeRoomIsAvailable);
+
+                                var FirstTimeRoomIsAvailableFromPlusFifteen =
+                                FirstTimeRoomIsAvailableFrom.AddMinutes(15);
+
+                                while (true)
+                                {
+                                    if (FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(check.MeetingDuration) > datetimeRoomSchedules[i].From)
+                                    {
+                                        break;
+                                    }
+
+                                    var firstTostr = FirstTimeRoomIsAvailableFromPlusFifteen.ToString("yyyy-MM-dd HH:mm:ss");
+
+                                    var firstPlus15PlusDuraion = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(check.MeetingDuration)
+                                    .ToString("yyyy-MM-dd HH:mm:ss");
+
+                                    var nextTimeInterval = $"{firstTostr} - {firstPlus15PlusDuraion} ";
+
+                                    sb.AppendLine($"{nextTimeInterval} ||");
+                                    sb.AppendLine();
+                                    FirstTimeRoomIsAvailableFromPlusFifteen = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(15);
+                                }
+                                break;
+                            }                           
+                        }
+                    }                                       
                 }
             }
 
