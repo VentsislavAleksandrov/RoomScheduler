@@ -1,0 +1,31 @@
+﻿@using RoomSceduler.Models.Rooms
+
+@model AvailableRoomsViewModel
+
+@{
+    ViewData["Title"] = "Available Rooms";
+}
+<div class="mb-1">
+    <p> @Model.AvailableRooms</p>     
+</div>
+<div class="row">
+    <div class="col-sm-12 offset-lg-2 col-lg-8 offset-xl-3 col-xl-6">
+        <h2 class="heading-margin text-center">Copy and Paste Time Interval Here</h2>
+        <form method="post" asp-controller="Rooms" asp-action="InsertTimeInterval">
+            <div class="form-group">
+                <label asp-for="RoomName"></label>
+                <input asp-for="RoomName" class="form-control" placeholder="Copy time interval here">
+                <span asp-validation-for="RoomName" class="small text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TimeInterval"></label>
+                <input asp-for="TimeInterval" class="form-control" placeholder="Copy time interval here">
+                <span asp-validation-for="TimeInterval" class="small text-danger"></span>
+            </div>
+            <input class="btn btn-primary" type="submit" value="Submit"/>
+        </form>
+    </div>
+</div>
+
+
+
