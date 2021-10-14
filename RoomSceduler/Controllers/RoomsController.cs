@@ -5,7 +5,6 @@ using RoomSceduler.Data.Models;
 using RoomSceduler.Models.Rooms;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -56,9 +55,6 @@ namespace RoomSceduler.Controllers
                     }
                 }
 
-                //var dateExists = room.Schedule.Any(x => x.From.Contains(check.Date));
-
-
                 if ( !date1 )
                 {
                     var roomOpeningDatetime = DateTime
@@ -73,7 +69,7 @@ namespace RoomSceduler.Controllers
                         var RoomIsAvailableTo = roomOpeningDatetime
                             .AddMinutes(check.MeetingDuration);
 
-                        var FirstTimeRoomIsAvailable = $"{FirstTimeRoomIsAvailableFrom.ToString("yyyy-MM-dd HH:mm:ss")} - {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} ";
+                        var FirstTimeRoomIsAvailable = $"{FirstTimeRoomIsAvailableFrom.ToString("yyyy-MM-dd HH:mm:ss")} -- {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} || ";
 
                         sb.AppendLine(FirstTimeRoomIsAvailable);
 
@@ -92,9 +88,9 @@ namespace RoomSceduler.Controllers
                             var firstPlus15PlusDuraion = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(check.MeetingDuration)
                             .ToString("yyyy-MM-dd HH:mm:ss");
                              
-                            var nextTimeInterval = $"{firstTostr} - {firstPlus15PlusDuraion} ";
+                            var nextTimeInterval = $"{firstTostr} -- {firstPlus15PlusDuraion} ";
 
-                            sb.AppendLine($"{nextTimeInterval} ||");
+                            sb.AppendLine($"{nextTimeInterval} || ");
                             sb.AppendLine();
                             FirstTimeRoomIsAvailableFromPlusFifteen = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(15);
                         }
@@ -129,7 +125,7 @@ namespace RoomSceduler.Controllers
                             var RoomIsAvailableTo = roomOpeningDatetime
                                 .AddMinutes(check.MeetingDuration);
 
-                            var FirstTimeRoomIsAvailable = $"{roomOpeningDatetime.ToString("yyyy-MM-dd HH:mm:ss")} - {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} ||";
+                            var FirstTimeRoomIsAvailable = $"{roomOpeningDatetime.ToString("yyyy-MM-dd HH:mm:ss")} -- {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")}  || ";
 
                             sb.AppendLine(FirstTimeRoomIsAvailable);
 
@@ -140,7 +136,7 @@ namespace RoomSceduler.Controllers
                                     break;
                                 }
 
-                                var nextTimeRoomIsAvailable = $"{roomOpeningTimePlusFifteen.ToString("yyyy-MM-dd HH:mm:ss")} - {roomOpeningTimePlusFifteen.AddMinutes(check.MeetingDuration).ToString("yyyy-MM-dd HH:mm:ss")}||";
+                                var nextTimeRoomIsAvailable = $"{roomOpeningTimePlusFifteen.ToString("yyyy-MM-dd HH:mm:ss").Substring(12)} -- {roomOpeningTimePlusFifteen.AddMinutes(check.MeetingDuration).ToString("yyyy-MM-dd HH:mm:ss")} || ";
 
                                 roomOpeningTimePlusFifteen = roomOpeningTimePlusFifteen.AddMinutes(15);
                                 sb.AppendLine(nextTimeRoomIsAvailable);
@@ -150,7 +146,46 @@ namespace RoomSceduler.Controllers
                         }
 
                     }
-                        
+
+                    var freeIntervalsList = new List<RoomAvailableIntervalsModel>();
+                    for (int i = 0; i < datetimeRoomSchedules.Count -1; i++)
+                    {
+                        var roomFreeInterval = datetimeRoomSchedules[i + 1].From - datetimeRoomSchedules[i].To;
+
+                        if (roomFreeInterval.TotalMinutes >= check.MeetingDuration)
+                        {
+                            var freeInterval = new RoomAvailableIntervalsModel
+                            {
+                                From = datetimeRoomSchedules[i].To,
+                                To = datetimeRoomSchedules[i + 1].From,
+                                AvialebleTime = roomFreeInterval
+                            };
+
+                            freeIntervalsList.Add(freeInterval);
+                        }
+                    }
+
+                    foreach (var interval in freeIntervalsList)
+                    {
+                        var firstTimeRoomIsAvialeble = $"{interval.From.ToString("yyyy-MM-dd HH:mm:ss")} -- {interval.From.AddMinutes(check.MeetingDuration).ToString("yyyy-MM-dd HH:mm:ss")} || ";
+
+                        sb.AppendLine(firstTimeRoomIsAvialeble);
+
+                        var firstTimeRoomIsAvialeblePlusFifteen = interval.From.AddMinutes(check.MeetingDuration + 15);
+                        while (true)
+                        {
+                            if (firstTimeRoomIsAvialeblePlusFifteen > interval.To)
+                            {
+                                break;
+                            }
+
+                            var nextTimeRoomIsAvialeble = $"{firstTimeRoomIsAvialeblePlusFifteen.ToString("yyyy - MM - dd HH: mm: ss")} -- {firstTimeRoomIsAvialeblePlusFifteen.AddMinutes(check.MeetingDuration).ToString("yyyy-MM-dd HH:mm:ss")} || ";
+
+                            sb.AppendLine(nextTimeRoomIsAvialeble);
+
+                            firstTimeRoomIsAvialeblePlusFifteen = firstTimeRoomIsAvialeblePlusFifteen.AddMinutes(15);
+                        }
+                    }
                                                            
                 }
             }
