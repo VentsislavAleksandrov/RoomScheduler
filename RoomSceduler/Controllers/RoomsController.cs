@@ -106,8 +106,6 @@ namespace RoomSceduler.Controllers
                     var roomOpeningDatetime = DateTime
                         .Parse($"{check.Date} T {room.AvailableFrom}");
 
-                    var roomClosingDatetime = DateTime
-                        .Parse(check.Date + "T" + room.AvailableTo);
 
                     var datetimeRoomSchedules = room.Schedule
                         .Select(x => new TimeSlotSort
@@ -120,47 +118,40 @@ namespace RoomSceduler.Controllers
                         .OrderBy(x => x.From)
                         .ToList();
 
-                    for (int i = 0; i < datetimeRoomSchedules.Count; i++)
-                    {
-                        var minutes = (datetimeRoomSchedules[i].From - roomOpeningDatetime);
+                    var firstAvialebleInterval = datetimeRoomSchedules[0].From - roomOpeningDatetime;
 
-                        if (minutes.TotalMinutes >= check.MeetingDuration)
+                    if (firstAvialebleInterval.TotalMinutes >= check.MeetingDuration)
+                    {
+                        var roomOpeningTimePlusFifteen = roomOpeningDatetime.AddMinutes(15);
+
+                        while (true)
                         {
+                            var RoomIsAvailableTo = roomOpeningDatetime
+                                .AddMinutes(check.MeetingDuration);
+
+                            var FirstTimeRoomIsAvailable = $"{roomOpeningDatetime.ToString("yyyy-MM-dd HH:mm:ss")} - {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} ||";
+
+                            sb.AppendLine(FirstTimeRoomIsAvailable);
+
                             while (true)
                             {
-                                var FirstTimeRoomIsAvailableFrom = roomOpeningDatetime;
-                                var RoomIsAvailableTo = roomOpeningDatetime
-                                    .AddMinutes(check.MeetingDuration);
-
-                                var FirstTimeRoomIsAvailable = $"{FirstTimeRoomIsAvailableFrom.ToString("yyyy-MM-dd HH:mm:ss")} - {RoomIsAvailableTo.ToString("yyyy-MM-dd HH:mm:ss")} ||";
-
-                                sb.AppendLine(FirstTimeRoomIsAvailable);
-
-                                var FirstTimeRoomIsAvailableFromPlusFifteen =
-                                FirstTimeRoomIsAvailableFrom.AddMinutes(15);
-
-                                while (true)
+                                if (roomOpeningTimePlusFifteen.AddMinutes(check.MeetingDuration) > datetimeRoomSchedules[0].From)
                                 {
-                                    if (FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(check.MeetingDuration) > datetimeRoomSchedules[i].From)
-                                    {
-                                        break;
-                                    }
-
-                                    var firstTostr = FirstTimeRoomIsAvailableFromPlusFifteen.ToString("yyyy-MM-dd HH:mm:ss");
-
-                                    var firstPlus15PlusDuraion = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(check.MeetingDuration)
-                                    .ToString("yyyy-MM-dd HH:mm:ss");
-
-                                    var nextTimeInterval = $"{firstTostr} - {firstPlus15PlusDuraion} ";
-
-                                    sb.AppendLine($"{nextTimeInterval} ||");
-                                    sb.AppendLine();
-                                    FirstTimeRoomIsAvailableFromPlusFifteen = FirstTimeRoomIsAvailableFromPlusFifteen.AddMinutes(15);
+                                    break;
                                 }
-                                break;
-                            }                           
+
+                                var nextTimeRoomIsAvailable = $"{roomOpeningTimePlusFifteen.ToString("yyyy-MM-dd HH:mm:ss")} - {roomOpeningTimePlusFifteen.AddMinutes(check.MeetingDuration).ToString("yyyy-MM-dd HH:mm:ss")}||";
+
+                                roomOpeningTimePlusFifteen = roomOpeningTimePlusFifteen.AddMinutes(15);
+                                sb.AppendLine(nextTimeRoomIsAvailable);
+                            }
+
+                            break;
                         }
-                    }                                       
+
+                    }
+                        
+                                                           
                 }
             }
 
